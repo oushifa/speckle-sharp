@@ -8,11 +8,7 @@ orbs:
 workflows:
   build:
     jobs:
-      - get-ci-tools:
-          context: github-dev-bot
       - build-sdk:
-          requires:
-            - get-ci-tools
   nuget:
     jobs:
       - build-sdk:
@@ -161,8 +157,6 @@ jobs: # Each project will have individual jobs for each specific task it has to 
       SSM: 'C:\Program Files\DigiCert\DigiCert One Signing Manager Tools'
     steps:
       - cached-checkout
-      - attach_workspace:
-          at: ./
       - run:
           name: Restore << parameters.slnname >>
           command: nuget restore << parameters.slnname >>/<< parameters.slnname >>.sln
@@ -207,14 +201,15 @@ jobs: # Each project will have individual jobs for each specific task it has to 
           steps:
             - run:
                 name: Build Installer Unsigned
-                command: speckle-sharp-ci-tools\InnoSetup\ISCC.exe speckle-sharp-ci-tools\%SLUG%.iss /Sbyparam=$p
+                command: |
+                  if exist speckle-sharp-ci-tools\InnoSetup\ISCC.exe (
+                    speckle-sharp-ci-tools\InnoSetup\ISCC.exe speckle-sharp-ci-tools\%SLUG%.iss /Sbyparam=$p
+                  ) else (
+                    echo Skipping unsigned installer build because speckle-sharp-ci-tools is missing.
+                  )
                 shell: cmd.exe #does not work in powershell
                 environment:
                   SLUG: << parameters.slug >>
-            - persist_to_workspace:
-                root: ./
-                paths:
-                  - speckle-sharp-ci-tools/Installers
       - when: # Setup certificates and build installers signed for tagged builds that aren't prerelease
           condition:
             and:
@@ -242,16 +237,32 @@ jobs: # Each project will have individual jobs for each specific task it has to 
                   & $env:SSM\smctl.exe windows certsync
             - run:
                 name: Build Installer Signed
-                command: speckle-sharp-ci-tools\InnoSetup\ISCC.exe speckle-sharp-ci-tools\%SLUG%.iss /Sbyparam=$p /DSIGN_INSTALLER /DCODE_SIGNING_CERT_FINGERPRINT=%SM_CODE_SIGNING_CERT_SHA1_HASH%
+                command: |
+                  if exist speckle-sharp-ci-tools\InnoSetup\ISCC.exe (
+                    speckle-sharp-ci-tools\InnoSetup\ISCC.exe speckle-sharp-ci-tools\%SLUG%.iss /Sbyparam=$p /DSIGN_INSTALLER /DCODE_SIGNING_CERT_FINGERPRINT=%SM_CODE_SIGNING_CERT_SHA1_HASH%
+                  ) else (
+                    echo Skipping signed installer build because speckle-sharp-ci-tools is missing.
+                  )
                 shell: cmd.exe #does not work in powershell
                 environment:
                   SLUG: << parameters.slug >>
-            - persist_to_workspace:
-                root: ./
-                paths:
-                  - speckle-sharp-ci-tools/Installers
+      - run:
+          name: Collect connector artifacts
+          command: |
+            New-Item -ItemType Directory -Force -Path circleci-artifacts | Out-Null
+            $builtFiles = Get-ChildItem -Path "<< parameters.slnname >>" -Recurse -File -Filter "<< parameters.dllname >>" -ErrorAction SilentlyContinue
+            if ($builtFiles) {
+              foreach ($f in $builtFiles) {
+                Copy-Item -Path $f.FullName -Destination "circleci-artifacts" -Force
+              }
+            }
+            if (Test-Path "speckle-sharp-ci-tools/Installers") {
+              Copy-Item -Path "speckle-sharp-ci-tools/Installers/*" -Destination "circleci-artifacts" -Recurse -Force -ErrorAction SilentlyContinue
+            }
+            Get-ChildItem -Path "circleci-artifacts" -Recurse | Select-Object FullName | Out-File -FilePath "circleci-artifacts/index.txt"
       - store_artifacts:
-          path: speckle-sharp-ci-tools/Installers
+          path: circleci-artifacts
+          destination: connector-build
 
   deploy-connector-new:
     docker:

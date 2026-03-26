@@ -146,14 +146,6 @@ def createConfigFile(deploy: bool, outputPath: str, external_build: bool):
         jobs_before_deploy.append("test-core")
     # Modify jobs for deployment
     if deploy:
-        if main_workflow["jobs"][0]["get-ci-tools"] != None:
-            main_workflow["jobs"].pop(0)
-
-        ci_tools_job = {
-            "context": "github-dev-bot",
-        }
-        main_workflow["jobs"] += [{"get-ci-tools": ci_tools_job}]
-        print("Modified job for deploy: get-ci-tools")
         print("Upload jobs disabled. Tag builds will store artifacts only.")
     if external_build:
         removeStepsThatUseSecrets(config)
@@ -173,7 +165,10 @@ def removeStepsThatUseSecrets(config):
         if key == "get-ci-tools":
             continue
         jobDict: dict = jobItem[key]
-        requires = jobDict["requires"]
+        if jobDict is None:
+            filteredJobs.append({f"{key}": jobDict})
+            continue
+        requires = jobDict.get("requires")
         if requires:
             if "get-ci-tools" in requires:
                 requires.pop(requires.index("get-ci-tools"))
