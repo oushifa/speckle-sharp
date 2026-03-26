@@ -229,7 +229,7 @@ internal class ParallelServerApi : ParallelOperationExecutor<ServerApiOperation>
 
       try
       {
-        var result = RunOperation(operation, inputValue!, serialApi).GetAwaiter().GetResult();
+        var result = RunOperation(operation, inputValue!, serialApi);
         tcs.SetResult(result);
       }
       catch (Exception ex)
@@ -244,36 +244,37 @@ internal class ParallelServerApi : ParallelOperationExecutor<ServerApiOperation>
     }
   }
 
-  private static async Task<object?> RunOperation(ServerApiOperation operation, object inputValue, ServerApi serialApi)
+  private static object? RunOperation(ServerApiOperation operation, object inputValue, ServerApi serialApi)
   {
     switch (operation)
     {
       case ServerApiOperation.DownloadSingleObject:
         var (dsoStreamId, dsoObjectId) = ((string, string))inputValue;
-        return await serialApi.DownloadSingleObject(dsoStreamId, dsoObjectId).ConfigureAwait(false);
+        return serialApi.DownloadSingleObject(dsoStreamId, dsoObjectId).GetAwaiter().GetResult();
       case ServerApiOperation.DownloadObjects:
         var (doStreamId, doObjectIds, doCallback) = ((string, IReadOnlyList<string>, CbObjectDownloaded))inputValue;
-        await serialApi.DownloadObjects(doStreamId, doObjectIds, doCallback).ConfigureAwait(false);
+        serialApi.DownloadObjects(doStreamId, doObjectIds, doCallback).GetAwaiter().GetResult();
         return null;
       case ServerApiOperation.HasObjects:
         var (hoStreamId, hoObjectIds) = ((string, IReadOnlyList<string>))inputValue;
-        return await serialApi.HasObjects(hoStreamId, hoObjectIds).ConfigureAwait(false);
+        return serialApi.HasObjects(hoStreamId, hoObjectIds).GetAwaiter().GetResult();
       case ServerApiOperation.UploadObjects:
         var (uoStreamId, uoObjects) = ((string, IReadOnlyList<(string, string)>))inputValue;
-        await serialApi.UploadObjects(uoStreamId, uoObjects).ConfigureAwait(false);
+        serialApi.UploadObjects(uoStreamId, uoObjects).GetAwaiter().GetResult();
         return null;
       case ServerApiOperation.UploadBlobs:
         var (ubStreamId, ubBlobs) = ((string, IReadOnlyList<(string, string)>))inputValue;
-        await serialApi.UploadBlobs(ubStreamId, ubBlobs).ConfigureAwait(false);
+        serialApi.UploadBlobs(ubStreamId, ubBlobs).GetAwaiter().GetResult();
         return null;
       case ServerApiOperation.HasBlobs:
         var (hbStreamId, hBlobs) = ((string, IReadOnlyList<(string, string)>))inputValue;
-        return await serialApi
+        return serialApi
           .HasBlobs(hbStreamId, hBlobs.Select(b => b.Item1.Split(':')[1]).ToList())
-          .ConfigureAwait(false);
+          .GetAwaiter()
+          .GetResult();
       case ServerApiOperation.DownloadBlobs:
         var (dbStreamId, blobIds, cb) = ((string, IReadOnlyList<string>, CbBlobdDownloaded))inputValue;
-        await serialApi.DownloadBlobs(dbStreamId, blobIds, cb).ConfigureAwait(false);
+        serialApi.DownloadBlobs(dbStreamId, blobIds, cb).GetAwaiter().GetResult();
         return null;
       default:
         throw new ArgumentOutOfRangeException(nameof(operation), operation, null);

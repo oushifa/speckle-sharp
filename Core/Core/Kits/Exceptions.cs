@@ -41,7 +41,7 @@ public class KitException : Exception
 /// </remarks>
 public class ConversionException : SpeckleException
 {
-  private object? ObjectThatFailed { get; }
+  public object? ObjectThatFailed { get; }
 
   public ConversionException(string? message, object? objectToConvert, Exception? innerException = null)
     : base(message, innerException)

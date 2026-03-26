@@ -8,7 +8,6 @@ public sealed class DllConflictManager
 {
   private readonly Dictionary<string, AssemblyConflictInfo> _assemblyConflicts = new();
   private readonly DllConflictManagmentOptionsLoader _optionsLoader;
-  private readonly DllConflictEventEmitter _eventEmitter;
   private readonly string[] _assemblyPathFragmentsToIgnore;
   private readonly string[] _exactAssemblyPathsToIgnore;
 
@@ -23,7 +22,7 @@ public sealed class DllConflictManager
   )
   {
     _optionsLoader = optionsLoader;
-    _eventEmitter = eventEmitter;
+    _ = eventEmitter;
     _assemblyPathFragmentsToIgnore = assemblyPathFragmentsToIgnore ?? Array.Empty<string>();
     _exactAssemblyPathsToIgnore = exactAssemblyPathsToIgnore ?? Array.Empty<string>();
   }

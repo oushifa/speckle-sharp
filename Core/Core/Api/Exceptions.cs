@@ -32,7 +32,7 @@ public class SpeckleGraphQLException<T> : SpeckleGraphQLException
 
 public class SpeckleGraphQLException : SpeckleException
 {
-  private readonly GraphQLRequest _request;
+  public GraphQLRequest Request { get; }
   public IGraphQLResponse? Response { get; }
 
   public IEnumerable<string> ErrorMessages =>
@@ -48,7 +48,7 @@ public class SpeckleGraphQLException : SpeckleException
   )
     : base(message, innerException)
   {
-    _request = request;
+    Request = request;
     Response = response;
   }
 
