@@ -148,12 +148,6 @@ def createConfigFile(deploy: bool, outputPath: str, external_build: bool):
         jobs_before_deploy.append("test-core")
     # Modify jobs for deployment
     if deploy:
-        deploy_job = {}
-        deploy_job["filters"] = getTagFilter(slugs_to_match)
-        deploy_job["requires"] = jobs_before_deploy
-        main_workflow["jobs"] += [{"deploy-connectors": deploy_job}]
-        print("Added deploy job: deployment")
-
         if main_workflow["jobs"][0]["get-ci-tools"] != None:
             main_workflow["jobs"].pop(0)
 
@@ -170,24 +164,7 @@ def createConfigFile(deploy: bool, outputPath: str, external_build: bool):
             if "filters" not in jobAttrs.keys():
                 jobAttrs["filters"] = getTagFilter(slugs_to_match)
                 print(f"Added missing filter to job: {x[0]}")
-
-        jobsToWait = []
-        for jobName in jobs_before_deploy:
-            if jobName == "test-core":
-                continue
-            job = getNewDeployJob(jobName)
-            if job["deploy-connector-new"]:
-                jobsToWait.append(job["deploy-connector-new"]["name"])
-            main_workflow["jobs"] += [job]
-        main_workflow["jobs"] += [
-            {
-                "notify-deploy": {
-                    "requires": jobsToWait,
-                    "context": "discord",
-                    "filters": getTagFilter(slugs_to_match),
-                }
-            }
-        ]
+        print("Upload jobs disabled. Tag builds will store artifacts only.")
     if external_build:
         removeStepsThatUseSecrets(config)
     # Output continuation file
