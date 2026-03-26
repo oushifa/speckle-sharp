@@ -24,6 +24,7 @@ public class ControlPoint : Point, ITransformable<ControlPoint>
   /// <summary>
   /// OBSOLETE - This is just here for backwards compatibility.
   /// </summary>
+#pragma warning disable IDE0051
   [
     JsonProperty(NullValueHandling = NullValueHandling.Ignore),
     Obsolete("Access coordinates using XYZ and weight fields", true)
@@ -41,6 +42,7 @@ public class ControlPoint : Point, ITransformable<ControlPoint>
       weight = value.Count > 3 ? value[3] : 1;
     }
   }
+#pragma warning restore IDE0051
 
   public double weight { get; set; }
 
