@@ -138,8 +138,6 @@ def createConfigFile(deploy: bool, outputPath: str, external_build: bool):
                     n = jobAttrs["name"]
                     jobs_before_deploy.append(n)
                     print(f"    Added connector job: {n}")
-                if deploy:
-                    jobAttrs["filters"] = getTagFilter([connector])
 
             # Append connector jobs to main workflow jobs
             main_workflow["jobs"] += connector_jobs[connector]
@@ -152,18 +150,10 @@ def createConfigFile(deploy: bool, outputPath: str, external_build: bool):
             main_workflow["jobs"].pop(0)
 
         ci_tools_job = {
-            "filters": getTagFilter(slugs_to_match),
             "context": "github-dev-bot",
         }
         main_workflow["jobs"] += [{"get-ci-tools": ci_tools_job}]
         print("Modified job for deploy: get-ci-tools")
-
-        for job in main_workflow["jobs"]:
-            x = list(job.keys())
-            jobAttrs = job[x[0]]
-            if "filters" not in jobAttrs.keys():
-                jobAttrs["filters"] = getTagFilter(slugs_to_match)
-                print(f"Added missing filter to job: {x[0]}")
         print("Upload jobs disabled. Tag builds will store artifacts only.")
     if external_build:
         removeStepsThatUseSecrets(config)
