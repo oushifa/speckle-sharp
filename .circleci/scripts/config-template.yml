@@ -2,7 +2,6 @@ version: 2.1
 
 orbs:
   win: circleci/windows@5.0.0
-  discord: antonioned/discord@0.1.0
   macos: circleci/macos@2.5.2
 # The main workflows for our monorepo pipeline.
 
@@ -673,9 +672,23 @@ jobs: # Each project will have individual jobs for each specific task it has to 
     docker:
       - image: cimg/base:2024.07
     steps:
-      - discord/status:
-          mentions: "1067457311980933140"
-          success_message:
-            ":tada: a new version of Speckle-Sharp connectors was build
-            successfully!"
-          failure_message: ":red_circle: oh no! Speckle-Sharp connectors build has failed!"
+      - run:
+          name: Notify Discord Success
+          when: on_success
+          command: |
+            if [ -z "${DISCORD_WEBHOOK:-}" ]; then
+              echo "DISCORD_WEBHOOK is not set; skipping notification."
+              exit 0
+            fi
+            payload='{"content":"<@1067457311980933140> :tada: a new version of Speckle-Sharp connectors was build successfully!"}'
+            curl -f -H "Content-Type: application/json" -X POST -d "$payload" "$DISCORD_WEBHOOK"
+      - run:
+          name: Notify Discord Failure
+          when: on_fail
+          command: |
+            if [ -z "${DISCORD_WEBHOOK:-}" ]; then
+              echo "DISCORD_WEBHOOK is not set; skipping notification."
+              exit 0
+            fi
+            payload='{"content":"<@1067457311980933140> :red_circle: oh no! Speckle-Sharp connectors build has failed!"}'
+            curl -f -H "Content-Type: application/json" -X POST -d "$payload" "$DISCORD_WEBHOOK"
