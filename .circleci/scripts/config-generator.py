@@ -146,16 +146,6 @@ def createConfigFile(deploy: bool, outputPath: str, external_build: bool):
     if build_core:
         # Require core tests too if core needs rebuilding.
         jobs_before_deploy.append("test-core")
-
-    if len(jobs_before_deploy) > 0:
-        export_workspace_job = {
-            "source-path": "speckle-sharp-ci-tools/Installers",
-            "artifact-path": "workspace-installers",
-            "requires": jobs_before_deploy,
-        }
-        main_workflow["jobs"] += [{"export-workspace-artifacts": export_workspace_job}]
-        print("Added artifact export job: export-workspace-artifacts")
-
     # Modify jobs for deployment
     if deploy:
         deploy_job = {}

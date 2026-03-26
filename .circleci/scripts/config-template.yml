@@ -661,30 +661,6 @@ jobs: # Each project will have individual jobs for each specific task it has to 
           paths:
             - speckle-sharp-ci-tools/Mac/<< parameters.installername >>/.installationFiles/
 
-  export-workspace-artifacts:
-    docker:
-      - image: cimg/base:2024.07
-    parameters:
-      source-path:
-        type: string
-      artifact-path:
-        type: string
-        default: workspace-export
-    steps:
-      - attach_workspace:
-          at: ./
-      - run:
-          name: Prepare workspace artifacts
-          command: |
-            mkdir -p "<< parameters.artifact-path >>"
-            if [ -e "<< parameters.source-path >>" ]; then
-              cp -R "<< parameters.source-path >>" "<< parameters.artifact-path >>/"
-            else
-              echo "Workspace path not found: << parameters.source-path >>" > "<< parameters.artifact-path >>/workspace-missing.txt"
-            fi
-      - store_artifacts:
-          path: << parameters.artifact-path >>
-
   deploy-connectors: # Uploads all installers found to S3
     docker:
       - image: cimg/base:2024.07
