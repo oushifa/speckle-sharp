@@ -2,7 +2,6 @@ version: 2.1
 
 orbs:
   win: circleci/windows@5.0.0
-  discord: antonioned/discord@0.1.0
   macos: circleci/macos@2.5.2
 # The main workflows for our monorepo pipeline.
 
@@ -670,14 +669,3 @@ jobs: # Each project will have individual jobs for each specific task it has to 
       - run:
           name: Proceed to deploy
           command: echo "This step is just here to wait for all build jobs before proceeding to deploy each of them individually. If a job fails, no connector will be deployed."
-
-  notify-deploy:
-    docker:
-      - image: cimg/base:2024.07
-    steps:
-      - discord/status:
-          mentions: "1067457311980933140"
-          success_message:
-            ":tada: a new version of Speckle-Sharp connectors was build
-            successfully!"
-          failure_message: ":red_circle: oh no! Speckle-Sharp connectors build has failed!"
